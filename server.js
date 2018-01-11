@@ -1,6 +1,7 @@
 var http = require('http')
 var WebSocketServer = require('websocket').server
 var fs = require('fs')
+const messages = require('./messages');
 var PORT = 18000
 //Partie pour servir les fichiers statiques (serveur http normal)
 var server = http.createServer(function (request, response) {
@@ -17,6 +18,10 @@ var server = http.createServer(function (request, response) {
 		case '/client.js':
 			response.writeHead(200, { 'Content-Type': 'text/javascript' });
 			responsePage = fs.readFileSync('client.js')
+			break;
+		case '/messages.js':
+			response.writeHead(200, { 'Content-Type': 'text/javascript' });
+			responsePage = fs.readFileSync('messages.js')
 			break;
 		//404 Not found
 		default:
@@ -36,10 +41,18 @@ wsServer = new WebSocketServer({
 	httpServer: server
 })
 
+let openConnections = [];
+//id will be rattached to the player, so we put it on in hello
+let id = 0;
+
 // WebSocket server
 wsServer.on('request', function (request) {
-	var connection = request.accept(null, request.origin)
+	var connection = request.accept(null, request.origin);
 
+	const playersToSend = openConnections.filter(c => c.player).map(c => c.player);
+	connection.sendUTF(messages.createMessage(messages.messageType.playersList, playersToSend));
+
+	openConnections.push(connection);
 	///////////////////
 	//CODE TO INSERT HERE
 	///////////////////
@@ -50,16 +63,33 @@ wsServer.on('request', function (request) {
 		else
 			return
 
+		switch (message.type) {
+			case messages.messageType.hello:
+				connection.player = message.content;
+				connection.player.id = id++;
+				console.log(`Received player ${connection.player.name}`)
+				openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.newPlayer, connection.player)));
+				break;
+		}
+
 		///////////////////
 		//CODE TO INSERT HERE
 		///////////////////
 
 	})
 
-	connection.on('close', function (connection) {
+	connection.on('close', function (c) {
 		///////////////////
 		//CODE TO INSERT HERE
 		///////////////////
+
+		//TODO check removal
+		let index = openConnections.indexOf(connection);
+		if (index != -1) {
+			openConnections.splice(index, 1);
+
+			openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.removePlayer, connection.player.id)))
+		}
 
 	})
 })

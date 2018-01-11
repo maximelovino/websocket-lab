@@ -3,8 +3,9 @@
 <body>
 	<script src="GameManager.js"></script>
 	<script src="client.js"></script>
+	<script src="messages.js"></script>
 	<script type="text/javascript">
-
+		let players = []
 		//Param isLocalPlayer => True to update the local player, false to update other players
 		Player.prototype.say = function (isLocalPlayer, msg) {
 			this.msg = new TextBubble(msg, 300, this)
@@ -83,7 +84,7 @@
 			pos = { "x": Math.random() * CANVAS.width, "y": Math.random() * CANVAS.height }
 			player = new Player(name, pos)
 			init()
-
+			connection.send(createMessage(messageType.hello, player));
 			///////////////////
 			//CODE TO INSERT HERE
 			///////////////////
@@ -98,6 +99,27 @@
 			}
 			console.log("Message in : ")
 			console.log(message)
+
+			switch (message.type) {
+				case messageType.newPlayer:
+					let p = new Player(message.content.name, message.content.pos);
+					p.id = message.content.id;
+					players.push(p);
+					break;
+				case messageType.playersList:
+					let receivedPlayers = Array.from(message.content);
+					receivedPlayers.forEach(p => {
+						let newP = new Player(p.name, p.pos);
+						newP.id = p.id;
+						players.push(newP);
+					});
+					break;
+				case messageType.removePlayer:
+					let index = players.findIndex(p => p.id === message.content);
+					if (index != -1) {
+						players.splice(index, 1);
+					}
+			}
 
 			///////////////////
 			//CODE TO INSERT HERE
