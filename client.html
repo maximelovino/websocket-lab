@@ -1,0 +1,133 @@
+<html>
+
+<body>
+	<script src="GameManager.js"></script>
+	<script src="client.js"></script>
+	<script type="text/javascript">
+
+		//Param isLocalPlayer => True to update the local player, false to update other players
+		Player.prototype.say = function (isLocalPlayer, msg) {
+			this.msg = new TextBubble(msg, 300, this)
+			if (isLocalPlayer) {
+				///////////////////
+				//CODE TO INSERT HERE
+				///////////////////
+			}
+		}
+
+		Player.prototype.update = function (isLocalPlayer) {
+			if (document.activeElement == document.body && isLocalPlayer && (_PRESSED[68] || _PRESSED[65] || _PRESSED[83] || _PRESSED[87])) {
+				if (_PRESSED[68])
+					this.pos.x += this.speed
+				else if (_PRESSED[65])
+					this.pos.x -= this.speed
+				if (_PRESSED[87])
+					this.pos.y -= this.speed
+				else if (_PRESSED[83])
+					this.pos.y += this.speed
+
+				///////////////////
+				//CODE TO INSERT HERE
+				///////////////////
+
+			}
+			if (this.msg) {
+				this.msg.ttl--
+				if (this.msg.ttl <= 0)
+					this.msg = undefined
+			}
+		}
+
+
+		//Globals
+		var CANVAS = document.createElement("canvas")
+		CANVAS.width = 600
+		CANVAS.height = 600
+		CANVAS.style.border = "1px solid black"
+		var CONTEXT = CANVAS.getContext("2d")
+		CONTEXT.textBaseline = "middle"
+		CONTEXT.textAlign = "center"
+		CONTEXT.font = "15px Georgia";
+
+		var TEXT_INPUT = document.createElement("input")
+		TEXT_INPUT.type = "text"
+
+
+		//Gestion de l'envoi de messages
+		document.body.addEventListener("keydown", function (e) {
+			if (e.keyCode == 13) {
+				if (document.activeElement == document.body) {
+					document.body.blur();
+					TEXT_INPUT.focus();
+				} else if (document.activeElement == TEXT_INPUT) {
+					player.say(true, TEXT_INPUT.value);
+					TEXT_INPUT.value = "";
+					TEXT_INPUT.blur();
+					document.body.focus();
+				}
+			}
+		})
+
+		var connection = new WebSocket('ws://' + window.location.host)
+
+		///////////////////
+		//CODE TO INSERT HERE
+		///////////////////
+
+		connection.onopen = function () {
+
+			var name = ''
+			while (name == '')
+				name = prompt("Choose a name", "defaultname")
+
+			pos = { "x": Math.random() * CANVAS.width, "y": Math.random() * CANVAS.height }
+			player = new Player(name, pos)
+			init()
+
+			///////////////////
+			//CODE TO INSERT HERE
+			///////////////////
+		}
+
+		connection.onmessage = function (message) {
+			try {
+				var message = JSON.parse(message.data);
+			} catch (e) {
+				console.log('Invalid JSON: ', message.data);
+				return
+			}
+			console.log("Message in : ")
+			console.log(message)
+
+			///////////////////
+			//CODE TO INSERT HERE
+			///////////////////
+		}
+
+		//Functions
+		var update = function () {
+			player.update(true)
+			players.forEach(function (p) {
+				p.update(false)
+			})
+		}
+
+		var draw = function () {
+			CONTEXT.clearRect(0, 0, CANVAS.width, CANVAS.height)
+			players.forEach(function (p) {
+				p.draw()
+			})
+			player.draw()
+		}
+		function init() {
+			document.body.appendChild(CANVAS)
+			document.body.appendChild(TEXT_INPUT)
+			GAME.setDrawFunction(draw)
+			GAME.setUpdateFunction(update)
+			GAME.init()
+		}
+	</script>
+
+</body>
+
+</html>
