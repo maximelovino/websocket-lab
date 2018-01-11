@@ -13,6 +13,7 @@
 				///////////////////
 				//CODE TO INSERT HERE
 				///////////////////
+				connection.send(createMessage(messageType.playerMessage, msg));
 			}
 		}
 
@@ -26,6 +27,8 @@
 					this.pos.y -= this.speed
 				else if (_PRESSED[83])
 					this.pos.y += this.speed
+
+				connection.send(createMessage(messageType.playerMove, this.pos));
 
 				///////////////////
 				//CODE TO INSERT HERE
@@ -99,7 +102,7 @@
 			}
 			console.log("Message in : ")
 			console.log(message)
-
+			let index = -1;
 			switch (message.type) {
 				case messageType.newPlayer:
 					let p = new Player(message.content.name, message.content.pos);
@@ -115,9 +118,21 @@
 					});
 					break;
 				case messageType.removePlayer:
-					let index = players.findIndex(p => p.id === message.content);
+					index = players.findIndex(p => p.id === message.content);
 					if (index != -1) {
 						players.splice(index, 1);
+					}
+					break;
+				case messageType.playerMove:
+					index = players.findIndex(p => p.id === message.content.id);
+					if (index != -1) {
+						players[index].pos = message.content.pos;
+					}
+					break;
+				case messageType.playerMessage:
+					index = players.findIndex(p => p.id === message.content.id);
+					if (index != -1) {
+						players[index].say(false, message.content.msg);
 					}
 			}
 

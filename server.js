@@ -70,6 +70,13 @@ wsServer.on('request', function (request) {
 				console.log(`Received player ${connection.player.name}`)
 				openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.newPlayer, connection.player)));
 				break;
+			case messages.messageType.playerMove:
+				connection.player.pos = message.content;
+				openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.playerMove, { id: connection.player.id, pos: connection.player.pos })));
+				break;
+			case messages.messageType.playerMessage:
+				openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.playerMessage, { id: connection.player.id, msg: message.content })));
+				break;
 		}
 
 		///////////////////

@@ -4,6 +4,7 @@ const messageType = {
 	playerMove: 2,
 	playersList: 3,
 	removePlayer: 4,
+	playerMessage: 5,
 }
 
 function createMessage(type, content) {
