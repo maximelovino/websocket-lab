@@ -94,8 +94,9 @@ wsServer.on('request', function (request) {
 		let index = openConnections.indexOf(connection);
 		if (index != -1) {
 			openConnections.splice(index, 1);
-
-			openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.removePlayer, connection.player.id)))
+			if (connection.player) {
+				openConnections.forEach(c => c.sendUTF(messages.createMessage(messages.messageType.removePlayer, connection.player.id)))
+			}
 		}
 
 	})
